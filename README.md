@@ -24,10 +24,12 @@ esc.plot_learning_curve()
 
 [Classifier Example]: https://github.com/ruifeng96150/easy_sklearn/demo_classifier.ipynb "Classifier Example"
 [Regressor Example]: https://github.com/ruifeng96150/easy_sklearn/demo_regressor.ipynb "Regressor Example"
+[Clustering Example]:https://github.com/ruifeng96150/easy_sklearn/blob/master/demo_clustering.ipynb "Clustering Example"
 
 ## Examples
-* [Classifier Example],
+* [Classifier Example]
 * [Regressor Example]
+* [Clustering Example]
 
 ## Contribution or Issues
 It's project is free to use and is waiting your contribute to make it more easier to use.
