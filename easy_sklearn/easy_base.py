@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
+
 import pandas as pd
+import numpy as np
 import time
 import utils
 from sklearn.model_selection import train_test_split
 import copy
 from sklearn import preprocessing
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.metrics import roc_curve, make_scorer, f1_score, accuracy_score, mean_squared_error
 
 
 class EasySklearn(object):
@@ -13,9 +16,11 @@ class EasySklearn(object):
     def __init__(self):
         self.es_models = {}
         self.es_scalers = {}
-        self.X_train_ = []
+        self.X_train_, self.y_train_ = [], []
+        self.X_test_, self.y_test_ = [], []
         self.best_model_ = None
         self.best_scaler_ = None
+        self.cv_best_model_ = None
         self.scores = pd.DataFrame(columns=('model', 'scaler', 'train_score', 'valid_score', 'time'))
 
     def split_data(self, X, y, test_size=0.2, random_state=1):
@@ -76,7 +81,7 @@ class EasySklearn(object):
                 train_score = clf.score(X_train_trans, y_train)
                 valid_score = clf.score(X_valid_trans, y_valid)
                 self.scores.loc[i] = [model, scaler_name, train_score, valid_score, time.time() - start_time]
-                if valid_score > best_score:
+                if valid_score > best_score or self.best_model_ is None:
                     print('find best model', scaler_name, model)
                     self.best_model_ = copy.deepcopy(clf)
                     self.best_scaler_ = copy.deepcopy(scaler)
@@ -93,7 +98,7 @@ class EasySklearn(object):
         print('\n group by scaler')
         print(self.scores.groupby('scaler').mean().sort_values(by=['valid_score'], ascending=0))
 
-    def getModel(self, model, scaler):
+    def getModel(self, model, scaler, best_model=False):
         if model is '':
             _model = self.best_model_
             _model_name = self.scores.loc[0, 'model']
@@ -107,19 +112,53 @@ class EasySklearn(object):
         else:
             _scaler = self.es_scalers[scaler]
             _scaler_name = scaler
-        return _model, _model_name, _scaler, _scaler_name
+
+        _defautl_param = self.es_models[_model_name]['param']
+        if best_model and self.cv_best_model_ is not None:
+            _model, _scaler = self.cv_best_model_, self.best_scaler_
+        return _model, _model_name, _scaler, _scaler_name, _defautl_param
 
     def score(self, X, y, model='', scaler=''):
         print('\ntest result:------------------------------')
-        _model, _model_name, _scaler, _scaler_name = self.getModel(model, scaler)
+        self.X_test_, self.y_test_ = X, y
+        _model, _model_name, _scaler, _scaler_name, _ = self.getModel(model, scaler)
         score = _model.score(_scaler.transform(X), y)
         print('test data shape:', X.shape, ' test with:', _model_name, _scaler_name)
         print(' score:', score)
         return score
 
-    def plot_learning_curve(self, model='', scaler=''):
+    def optimize(self, X=None, y=None, model='', scaler='', param_grid=None, scoring=None, n_splits=5, n_iter=20,
+                 n_jobs=-1):
+        print('\noptimize:------------------------------')
+        # http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+        X, y = X or self.X_train_, y or self.y_train_
+        _model, _model_name, _scaler, _scaler_name, _default_param = self.getModel(model, scaler)
+        param_grid = param_grid or _default_param
+        cv = RandomizedSearchCV(estimator=_model, cv=n_splits, scoring=scoring,
+                                param_distributions=param_grid, n_jobs=n_jobs,
+                                n_iter=n_iter, verbose=1)
+        X_ = _scaler.transform(X)
+        cv.fit(X_, y)
+        score = cv.best_estimator_.score(_scaler.transform(self.X_test_), self.y_test_)
+        self.cv_best_model_ = cv.best_estimator_
+        # score = cv.score(_scaler.transform(self.X_test_), self.y_test_)
+        print ('best parameter ', cv.best_params_)
+        print('The score after optimize', score)
+
+    def predict(self, X, best_model=True, model='', scaler=''):
+        _model, _model_name, _scaler, _scaler_name, _ = self.getModel(model, scaler, best_model)
+        print('\n predict with model=%s and scaler=%s ------------------------------' % (_model_name, _scaler_name))
+        return _model.predict(_scaler.transform(X))
+
+    def plot_learning_curve(self, model='', scaler='', best_model=False):
         print('\nplot learning curve:------------------------------')
-        _model, _model_name, _scaler, _scaler_name = self.getModel(model, scaler)
+        _model, _model_name, _scaler, _scaler_name, _ = self.getModel(model, scaler, best_model)
         title = '%s-%s' % (_model_name, _scaler_name)
         X_train_trans = _scaler.transform(self.X_train_)
         utils.plot_learning_curve(_model, X_train_trans, self.y_train_, title=title)
+
+    def plot_diff(self, model='', scaler='', best_model=True):
+        print('\nplot plot_different:------------------------------')
+        _model, _model_name, _scaler, _scaler_name, _ = self.getModel(model, scaler, best_model)
+        y_pred = _model.predict(_scaler.transform(self.X_test_))
+        utils.plot_pred_diff(self.y_test_, y_pred)

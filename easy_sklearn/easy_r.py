@@ -14,14 +14,16 @@ class EasySklearnRegressor(EasySklearn):
     def default_models_(self):
         return {
             'Tree': {'clf': tree.DecisionTreeRegressor(),
-                     'param': {}},
-            'GBDT': {'clf': ensemble.GradientBoostingRegressor(),
+                     'param': {'max_depth': [3, 5, 7, 10, 20]
+                               }},
+            'GBDT': {'clf': ensemble.GradientBoostingRegressor(random_state=1),
                      'param': {
+                         'n_estimators': [50, 100, 150, 200],
                          'learning_rate': [0.1],
-                         'max_depth': [4, 6],
-                         'alpha': [0.9],
+                         'max_depth': [4, 6, 8],
+                         'alpha': [0.7, 0.8, 0.9],
                          'max_leaf_nodes': [10, 20],
-                         'min_samples_split': [2, 4]
+                         'min_samples_split': [2, 4, 7]
                      }},
             'Lin': {'clf': linear_model.LinearRegression(),
                     'param': {
@@ -46,15 +48,14 @@ class EasySklearnRegressor(EasySklearn):
             'SGD': {'clf': linear_model.SGDRegressor(),
                     'param': {}},
             'SVM': {'clf': svm.SVR(kernel='rbf', C=1.0, epsilon=1),
-                    'param': {}},
+                    'param': {
+                        'C': [1, 10, 100, 1000, 10000]
+                    }},
             'Knn': {'clf': neighbors.KNeighborsRegressor(),
                     'param': {}},
-            'RF': {'clf': ensemble.RandomForestRegressor(),
+            'RF': {'clf': ensemble.RandomForestRegressor(random_state=1),
                    'param':
-                       {'n_estimators': [3, 10, 30],
-                        'bootstrap': [True, False],
-                        'max_features': [3, 7]
-                        }},
+                       {'n_estimators': [10, 30, 50, 100, 150], }},
             'ADA': {'clf': ensemble.AdaBoostRegressor(n_estimators=100),
                     'param': {}},
             'BAG': {'clf': BaggingRegressor(bootstrap=True),

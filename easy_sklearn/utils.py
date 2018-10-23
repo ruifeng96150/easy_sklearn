@@ -1,6 +1,20 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import  mean_squared_error
+
+def plot_pred_diff(y_test, y_pred):
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+    df = pd.DataFrame({'pred': y_pred, 'real':y_test})
+    df.sort_values(by=['real'], inplace=True)
+    dx = np.arange(len(y_pred))
+    plt.plot(dx, df['real'], 'go-', label='true value')
+    plt.plot(dx, df['pred'], 'ro-', label='predict value')
+    plt.title('predict mse:%f' % (rmse))
+    plt.legend()
+    plt.show()
 
 def plot_learning_curve(estimator, X, y, title='', ylim=(0.0, 1.01), cv=None,
                         n_jobs=-1, train_sizes=np.linspace(.1, 1.0, 5)):
