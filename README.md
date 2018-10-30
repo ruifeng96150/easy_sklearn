@@ -22,8 +22,8 @@ esc.plot_learning_curve()
 
 ```
 
-[Classifier Example]: https://github.com/ruifeng96150/easy_sklearn/demo_classifier.ipynb "Classifier Example"
-[Regressor Example]: https://github.com/ruifeng96150/easy_sklearn/demo_regressor.ipynb "Regressor Example"
+[Classifier Example]:https://github.com/ruifeng96150/easy_sklearn/blob/master/demo_classifier.ipynb "Classifier Example"
+[Regressor Example]:https://github.com/ruifeng96150/easy_sklearn/blob/master/demo_regressor.ipynb "Regressor Example"
 [Clustering Example]:https://github.com/ruifeng96150/easy_sklearn/blob/master/demo_clustering.ipynb "Clustering Example"
 
 ## Examples
